@@ -17,9 +17,12 @@
 
 package ohos.geo_location_manager
 
-import ohos.business_exception.BusinessException
-import ohos.ffi.SUCCESS_CODE
+import ohos.business_exception.{BusinessException, AsyncCallback}
+import ohos.callback_invoke.{CallbackObject, Callback1Argument}
+import ohos.ffi.{Callback1Param, SUCCESS_CODE}
 import ohos.labels.APILevel
+import std.collection.ArrayList
+import std.sync.Mutex
 
 /**
  * Provides interfaces for acquiring location information, managing location switches,
@@ -153,5 +156,402 @@ public class GeoLocationManager {
             throw BusinessException(getErrorCode(errCode), getErrorMsg(errCode))
         }
         return res
+    }
+}
+
+let LOCATION_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
+let LOCATION_ERROR_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
+let LOCATION_ENABLED_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
+let COUNTRY_CODE_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
+let ON_OFF_MUTEX = Mutex()
+
+func checkRet(errCode: Int32): Unit {
+    if (errCode != SUCCESS_CODE) {
+        throw BusinessException(getErrorCode(errCode), getErrorMsg(errCode))
+    }
+}
+
+func findCallbackObject(callbackList: ArrayList<(CallbackObject, Int64)>, callback: CallbackObject): Bool {
+    for (item in callbackList) {
+        if (refEq(item[0], callback)) {
+            return true
+        }
+    }
+    return false
+}
+
+func off(callbackList: ArrayList<(CallbackObject, Int64)>, callback: CallbackObject,
+    offFunc: CFunc<(Int64) -> Int32>): Unit {
+    synchronized(ON_OFF_MUTEX) {
+        if (callbackList.size == 0) {
+            GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager Off failed: The event is not registered")
+            return
+        }
+        for (idx in 0..callbackList.size) {
+            if (refEq(callbackList[idx][0], callback)) {
+                unsafe { checkRet(offFunc(callbackList[idx][1])) }
+                callbackList.remove(at: idx)
+                return
+            }
+        }
+        GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager Off failed: The callback is not registered")
+    }
+}
+
+func offAll(callbackList: ArrayList<(CallbackObject, Int64)>, offAllFunc: CFunc<() -> Int32>): Unit {
+    synchronized(ON_OFF_MUTEX) {
+        if (callbackList.size == 0) {
+            GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager Off failed: The event is not registered")
+            return
+        }
+        unsafe { checkRet(offAllFunc()) }
+        callbackList.clear()
+    }
+}
+
+/**
+ * Subscribe location changed.
+ *
+ * @param { LocationRequest } request - Indicates the location request parameters.
+ * @param { Callback1Argument<Location> } callback - Indicates the callback for reporting the location result.
+ * @throws { BusinessException } 201 - Permission verification failed. The application does not have the
+ *     permission required to call the API.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.onLocationChange} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301100 - The location switch is off.
+ */
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onLocationChange(request: LocationRequest, callback: Callback1Argument<Location>): Unit {
+    synchronized(ON_OFF_MUTEX) {
+        if (findCallbackObject(LOCATION_CALLBACKS, callback)) {
+            GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager On failed: This request already exists")
+            return
+        }
+        unsafe {
+            let wrapper = {value: CJLocation => callback.invoke(None, value.toLocationAndFree())}
+            let lambdaData = Callback1Param<CJLocation, Unit>.create(wrapper)
+            let errCode = FfiGeoLocationManagerOnLocationChange(CJLocationRequest(request), lambdaData.getID())
+            if (errCode != SUCCESS_CODE) {
+                lambdaData.destroySelf()
+                checkRet(errCode)
+            }
+            LOCATION_CALLBACKS.add((callback, lambdaData.getID()))
+        }
+    }
+}
+
+/**
+ * Subscribe location changed.
+ *
+ * @param { ContinuousLocationRequest } request - Indicates the location request parameters.
+ * @param { Callback1Argument<Location> } callback - Indicates the callback for reporting the location result.
+ * @throws { BusinessException } 201 - Permission verification failed. The application does not have the
+ *     permission required to call the API.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.onLocationChange} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301100 - The location switch is off.
+ */
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onLocationChange(request: ContinuousLocationRequest, callback: Callback1Argument<Location>): Unit {
+    synchronized(ON_OFF_MUTEX) {
+        if (findCallbackObject(LOCATION_CALLBACKS, callback)) {
+            GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager On failed: This request already exists")
+            return
+        }
+        unsafe {
+            let wrapper = {value: CJLocation => callback.invoke(None, value.toLocationAndFree())}
+            let lambdaData = Callback1Param<CJLocation, Unit>.create(wrapper)
+            let errCode = FfiGeoLocationManagerOnContinuousLocationRequest(CJContinuousLocationRequest(request),
+                lambdaData.getID())
+            if (errCode != SUCCESS_CODE) {
+                lambdaData.destroySelf()
+                checkRet(errCode)
+            }
+            LOCATION_CALLBACKS.add((callback, lambdaData.getID()))
+        }
+    }
+}
+
+/**
+ * Unsubscribe location changed.
+ *
+ * @param { ?Callback1Argument<Location> } [callback] - Indicates the callback for reporting the location result.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.offLocationChange} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func offLocationChange(callback!: ?Callback1Argument<Location> = None): Unit {
+    match (callback) {
+        case Some(value) => off(LOCATION_CALLBACKS, value, FfiGeoLocationManagerOffLocationChange)
+        case None => offAll(LOCATION_CALLBACKS, FfiGeoLocationManagerOffLocationChangeAll)
+    }
+}
+
+/**
+ * Subscribe continuous location error changed.
+ *
+ * @param { Callback1Argument<LocationError> } callback - Indicates the callback for reporting the continuous location error.
+ * @throws { BusinessException } 201 - Permission verification failed. The application does not have the
+ *     permission required to call the API.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.onLocationError} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ */
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onLocationError(callback: Callback1Argument<LocationError>): Unit {
+    synchronized(ON_OFF_MUTEX) {
+        if (findCallbackObject(LOCATION_ERROR_CALLBACKS, callback)) {
+            GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager On failed: This request already exists")
+            return
+        }
+        unsafe {
+            let wrapper = {value: Int32 => callback.invoke(None, LocationError.parse(value))}
+            let lambdaData = Callback1Param<Int32, Unit>.create(wrapper)
+            let errCode = FfiGeoLocationManagerOnLocationError(lambdaData.getID())
+            if (errCode != SUCCESS_CODE) {
+                lambdaData.destroySelf()
+                checkRet(errCode)
+            }
+            LOCATION_ERROR_CALLBACKS.add((callback, lambdaData.getID()))
+        }
+    }
+}
+
+/**
+ * Unsubscribe continuous location error changed.
+ *
+ * @param { ?Callback1Argument<LocationError> } [callback] - Indicates the callback for reporting the
+ *     continuous location error.
+ * @throws { BusinessException } 201 - Permission verification failed. The application does not have the
+ *     permission required to call the API.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.offLocationError} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ */
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func offLocationError(callback!: ?Callback1Argument<LocationError> = None): Unit {
+    match (callback) {
+        case Some(value) => off(LOCATION_ERROR_CALLBACKS, value, FfiGeoLocationManagerOffLocationError)
+        case None => offAll(LOCATION_ERROR_CALLBACKS, FfiGeoLocationManagerOffLocationErrorAll)
+    }
+}
+
+/**
+ * Subscribe location switch changed.
+ *
+ * @param { Callback1Argument<Bool> } callback - Indicates the callback for reporting the location switch status.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.onLocationEnabledChange} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onLocationEnabledChange(callback: Callback1Argument<Bool>): Unit {
+    synchronized(ON_OFF_MUTEX) {
+        if (findCallbackObject(LOCATION_ENABLED_CALLBACKS, callback)) {
+            GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager On failed: This request already exists")
+            return
+        }
+        unsafe {
+            let wrapper = {value: Bool => callback.invoke(None, value)}
+            let lambdaData = Callback1Param<Bool, Unit>.create(wrapper)
+            let errCode = FfiGeoLocationManagerOnLocationEnabledChange(lambdaData.getID())
+            if (errCode != SUCCESS_CODE) {
+                lambdaData.destroySelf()
+                checkRet(errCode)
+            }
+            LOCATION_ENABLED_CALLBACKS.add((callback, lambdaData.getID()))
+        }
+    }
+}
+
+/**
+ * Unsubscribe location switch changed.
+ *
+ * @param { ?Callback1Argument<Bool> } [callback] - Indicates the callback for reporting the location switch status.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.offLocationEnabledChange} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func offLocationEnabledChange(callback!: ?Callback1Argument<Bool> = None): Unit {
+    match (callback) {
+        case Some(value) => off(LOCATION_ENABLED_CALLBACKS, value, FfiGeoLocationManagerOffLocationEnabledChange)
+        case None => offAll(LOCATION_ENABLED_CALLBACKS, FfiGeoLocationManagerOffLocationEnabledChangeAll)
+    }
+}
+
+/**
+ * Registering the callback function for listening to country code changes.
+ *
+ * @param { Callback1Argument<CountryCode> } callback - Indicates the callback for reporting country code changes.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.onCountryCodeChange} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301500 - Failed to query the area information.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onCountryCodeChange(callback: Callback1Argument<CountryCode>): Unit {
+    synchronized(ON_OFF_MUTEX) {
+        if (findCallbackObject(COUNTRY_CODE_CALLBACKS, callback)) {
+            GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager On failed: This request already exists")
+            return
+        }
+        unsafe {
+            let wrapper = {value: CJCountryCode => callback.invoke(None, value.toCountryCodeAndFree())}
+            let lambdaData = Callback1Param<CJCountryCode, Unit>.create(wrapper)
+            let errCode = FfiGeoLocationManagerOnCountryCodeChange(lambdaData.getID())
+            if (errCode != SUCCESS_CODE) {
+                lambdaData.destroySelf()
+                checkRet(errCode)
+            }
+            COUNTRY_CODE_CALLBACKS.add((callback, lambdaData.getID()))
+        }
+    }
+}
+
+/**
+ * Unregistering the callback function for listening to country code changes.
+ *
+ * @param { ?Callback1Argument<CountryCode> } [callback] - Indicates the callback for reporting country code changes.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.offCountryCodeChange} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301500 - Failed to query the area information.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func offCountryCodeChange(callback!: ?Callback1Argument<CountryCode> = None): Unit {
+    match (callback) {
+        case Some(value) => off(COUNTRY_CODE_CALLBACKS, value, FfiGeoLocationManagerOffCountryCodeChange)
+        case None => offAll(COUNTRY_CODE_CALLBACKS, FfiGeoLocationManagerOffCountryCodeChangeAll)
+    }
+}
+
+/**
+ * Obtain last known location.
+ *
+ * @returns { Location } The last known location information.
+ * @throws { BusinessException } 201 - Permission verification failed. The application does not have the
+ *     permission required to call the API.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.getLastLocation} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301100 - The location switch is off.
+ * @throws { BusinessException } 3301200 - Failed to obtain the geographical location.
+ */
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func getLastLocation(): Location {
+    var errCode: Int32 = 0
+    let cLocation = unsafe { FfiOHOSGeoLocationManagerGetLastLocation(inout errCode) }
+    if (errCode != SUCCESS_CODE) {
+        throw BusinessException(getErrorCode(errCode), getErrorMsg(errCode))
+    }
+    return cLocation.toLocationAndFree()
+}
+
+/**
+ * Send extended commands to location subsystem.
+ *
+ * @param { LocationCommand } command - Indicates the extended command message body.
+ * @param { AsyncCallback<Unit> } callback - Indicates the callback for reporting the error message.
+ *     If the function fails to execute, the error message will be carried in the first parameter err of
+ *     AsyncCallback, If the function executes successfully, execute the callback function only, no data
+ *     will be returned.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.sendCommand} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func sendCommand(command: LocationCommand, callback: AsyncCallback<Unit>): Unit {
+    spawn {
+        var errCode: Int32 = 0
+        var cCommand = CJLocationCommand(command)
+        unsafe { FfiOHOSGeoLocationManagerSendCommand(cCommand, inout errCode) }
+        cCommand.free()
+        if (errCode != SUCCESS_CODE) {
+            callback(Some(BusinessException(getErrorCode(errCode), getErrorMsg(errCode))), None)
+        } else {
+            callback(None, Some(()))
+        }
+    }
+}
+
+/**
+ * Obtain the current country code.
+ *
+ * @param { AsyncCallback<CountryCode> } callback - Indicates the callback for reporting the country code.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.getCountryCode} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301500 - Failed to query the area information.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func getCountryCode(callback: AsyncCallback<CountryCode>): Unit {
+    spawn {
+        var errCode: Int32 = 0
+        let cCountryCode = unsafe { FfiOHOSGeoLocationManagerGetCountryCode(inout errCode) }
+        if (errCode != SUCCESS_CODE) {
+            cCountryCode.free()
+            callback(Some(BusinessException(getErrorCode(errCode), getErrorMsg(errCode))), None)
+            return
+        }
+        let countryCode = cCountryCode.toCountryCode()
+        cCountryCode.free()
+        callback(None, Some(countryCode))
     }
 }

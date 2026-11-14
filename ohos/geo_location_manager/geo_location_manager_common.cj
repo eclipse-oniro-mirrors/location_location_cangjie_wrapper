@@ -22,6 +22,7 @@ import ohos.hilog.HilogChannel
 import ohos.labels.{APILevel, Hide}
 
 import std.collection.{HashMap, Map}
+import std.deriving.Derive
 
 const LOG_CORE: UInt32 = 3
 const LOCATION_LOG_DOMAIN: UInt32 = 0xD002300
@@ -563,5 +564,609 @@ func getErrorMsg(code: Int32): String {
         return ERROR_CODE_MAP[errorCode]
     } else {
         return "Unknown error code ${errorCode}"
+    }
+}
+
+/**
+ * Configuring parameters in location requests.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public class LocationRequest {
+    private let locationRequestImpl: LocationRequestImpl
+
+    /**
+     * Priority of the location request.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop priority: ?LocationRequestPriority {
+        get() {
+            locationRequestImpl.priority
+        }
+        set(v) {
+            locationRequestImpl.priority = v
+        }
+    }
+    /**
+     * User scenario of the location request.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop scenario: ?LocationRequestScenario {
+        get() {
+            locationRequestImpl.scenario
+        }
+        set(v) {
+            locationRequestImpl.scenario = v
+        }
+    }
+    /**
+     * Location report interval.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop timeInterval: ?Int32 {
+        get() {
+            locationRequestImpl.timeInterval
+        }
+        set(v) {
+            locationRequestImpl.timeInterval = v
+        }
+    }
+    /**
+     * Location report distance interval.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop distanceInterval: ?Float64 {
+        get() {
+            locationRequestImpl.distanceInterval
+        }
+        set(v) {
+            locationRequestImpl.distanceInterval = v
+        }
+    }
+    /**
+     * Accuracy requirements for reporting locations.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop maxAccuracy: ?Float32 {
+        get() {
+            locationRequestImpl.maxAccuracy
+        }
+        set(v) {
+            locationRequestImpl.maxAccuracy = v
+        }
+    }
+
+    /**
+     * LocationRequest Constructor.
+     *
+     * @param { ?LocationRequestPriority } [priority] - The priority of the location request. The default value is FirstFix.
+     * @param { ?LocationRequestScenario } [scenario] - The user scenario of the location request. The default value is Unset.
+     * @param { ?Int32 } [timeInterval] - The location report interval, in seconds. The default value is 1.
+     * @param { ?Float64 } [distanceInterval] - The location report distance interval. The default value is 0.0.
+     * @param { ?Float32 } [maxAccuracy] - The accuracy requirements for reporting locations. The default value is 0.0.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public init(priority!: ?LocationRequestPriority = None,
+        scenario!: ?LocationRequestScenario = None, timeInterval!: ?Int32 = None,
+        distanceInterval!: ?Float64 = None, maxAccuracy!: ?Float32 = None) {
+        locationRequestImpl = LocationRequestImpl(priority: priority, scenario: scenario,
+            timeInterval: timeInterval, distanceInterval: distanceInterval, maxAccuracy: maxAccuracy)
+    }
+}
+
+class LocationRequestImpl {
+    var priority: ?LocationRequestPriority
+    var scenario: ?LocationRequestScenario
+    var timeInterval: ?Int32
+    var distanceInterval: ?Float64
+    var maxAccuracy: ?Float32
+
+    init(priority!: ?LocationRequestPriority = None,
+        scenario!: ?LocationRequestScenario = None, timeInterval!: ?Int32 = None,
+        distanceInterval!: ?Float64 = None, maxAccuracy!: ?Float32 = None) {
+        this.priority = priority
+        this.scenario = scenario
+        this.timeInterval = timeInterval
+        this.distanceInterval = distanceInterval
+        this.maxAccuracy = maxAccuracy
+    }
+}
+
+/**
+ * Configuring parameters in continuous location requests.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public class ContinuousLocationRequest {
+    private let continuousLocationRequestImpl: ContinuousLocationRequestImpl
+
+    /**
+     * Location report interval, in seconds.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop interval: Int32 {
+        get() {
+            continuousLocationRequestImpl.interval
+        }
+        set(v) {
+            continuousLocationRequestImpl.interval = v
+        }
+    }
+    /**
+     * Location scenario. You can select a user activity scenario or power consumption scenario.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop locationScenario: ScenarioValueType {
+        get() {
+            continuousLocationRequestImpl.locationScenario
+        }
+        set(v) {
+            continuousLocationRequestImpl.locationScenario = v
+        }
+    }
+
+    /**
+     * ContinuousLocationRequest Constructor.
+     *
+     * @param { Int32 } interval - The location report interval, in seconds.
+     * @param { ScenarioValueType } locationScenario - The location scenario, which is a user activity
+     *     scenario or a power consumption scenario.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public init(interval: Int32, locationScenario: ScenarioValueType) {
+        continuousLocationRequestImpl = ContinuousLocationRequestImpl(interval, locationScenario)
+    }
+}
+
+class ContinuousLocationRequestImpl {
+    var interval: Int32
+    var locationScenario: ScenarioValueType
+
+    init(interval: Int32, locationScenario: ScenarioValueType) {
+        this.interval = interval
+        this.locationScenario = locationScenario
+    }
+}
+
+/**
+ * Indicates the location scenario type.
+ *
+ * It is used as the locationScenario parameter of ContinuousLocationRequest. You can select a user
+ *     activity scenario or a power consumption scenario.
+ */
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum ScenarioValueType {
+    /**
+     * Represents the user activity scenario.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    UserActivityScenarioValue(UserActivityScenario)
+    |
+    /**
+     * Represents the power consumption scenario.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    PowerConsumptionScenarioValue(PowerConsumptionScenario)
+    | ...
+
+    func getValue(): Int32 {
+        match (this) {
+            case UserActivityScenarioValue(value) => value.getValue()
+            case PowerConsumptionScenarioValue(value) => value.getValue()
+            case _ => throw BusinessException(3301000, "The type is not supported yet.")
+        }
+    }
+}
+
+/**
+ * Enum for location error code.
+ */
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum LocationError {
+    /**
+     * Default cause for location failure.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedDefault
+    |
+    /**
+     * Locating failed because the location permission fails to be verified.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedLocationPermissionDenied
+    |
+    /**
+     * Locating failed because the app is in the background and the background location permission
+     * verification failed.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedBackgroundPermissionDenied
+    |
+    /**
+     * Locating failed because the location switch is turned off.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedLocationSwitchOff
+    |
+    /**
+     * Locating failed because internet access failure.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedInternetAccessFailure
+    | ...
+
+    static func parse(value: Int32): LocationError {
+        match (value) {
+            case -1 => LocatingFailedDefault
+            case -2 => LocatingFailedLocationPermissionDenied
+            case -3 => LocatingFailedBackgroundPermissionDenied
+            case -4 => LocatingFailedLocationSwitchOff
+            case -5 => LocatingFailedInternetAccessFailure
+            case _ => throw BusinessException(3301000, "The type is not supported yet.")
+        }
+    }
+
+    func getValue(): Int32 {
+        match (this) {
+            case LocatingFailedDefault => -1
+            case LocatingFailedLocationPermissionDenied => -2
+            case LocatingFailedBackgroundPermissionDenied => -3
+            case LocatingFailedLocationSwitchOff => -4
+            case LocatingFailedInternetAccessFailure => -5
+            case _ => throw BusinessException(3301000, "The type is not supported yet.")
+        }
+    }
+}
+
+/**
+ * Enum for user activity scenario.
+ */
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum UserActivityScenario {
+    /**
+     * Navigation scenario. High positioning precision and real-time performance are required.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    Navigation
+    |
+    /**
+     * Sport scenario. High positioning precision is required.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    Sport
+    |
+    /**
+     * Transport scenario. High positioning precision and real-time performance are required.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    Transport
+    |
+    /**
+     * Daily life scenarios. Low requirements on positioning precision.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    DailyLifeService
+    | ...
+
+    func getValue(): Int32 {
+        match (this) {
+            case Navigation => 0x401
+            case Sport => 0x402
+            case Transport => 0x403
+            case DailyLifeService => 0x404
+            case _ => throw BusinessException(3301000, "The type is not supported yet.")
+        }
+    }
+}
+
+/**
+ * Enum for power consumption scenario.
+ */
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum PowerConsumptionScenario {
+    /**
+     * High power consumption mode.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    HighPowerConsumption
+    |
+    /**
+     * Low power consumption mode.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LowPowerConsumption
+    |
+    /**
+     * Power saving scenarios.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    NoPowerConsumption
+    | ...
+
+    func getValue(): Int32 {
+        match (this) {
+            case HighPowerConsumption => 0x601
+            case LowPowerConsumption => 0x602
+            case NoPowerConsumption => 0x603
+            case _ => throw BusinessException(3301000, "The type is not supported yet.")
+        }
+    }
+}
+
+/**
+ * Location subsystem command structure.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public class LocationCommand {
+    private let locationCommandImpl: LocationCommandImpl
+
+    /**
+     * Information about the scenario where the command is sent.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop scenario: LocationRequestScenario {
+        get() {
+            locationCommandImpl.scenario
+        }
+        set(v) {
+            locationCommandImpl.scenario = v
+        }
+    }
+    /**
+     * Sent command content.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop command: String {
+        get() {
+            locationCommandImpl.command
+        }
+        set(v) {
+            locationCommandImpl.command = v
+        }
+    }
+
+    /**
+     * LocationCommand constructor.
+     *
+     * @param { LocationRequestScenario } scenario - Information about the scenario where the command is sent.
+     * @param { String } command - Sent command content.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public init(scenario: LocationRequestScenario, command: String) {
+        locationCommandImpl = LocationCommandImpl(scenario, command)
+    }
+}
+
+class LocationCommandImpl {
+    var scenario: LocationRequestScenario
+    var command: String
+
+    init(scenario: LocationRequestScenario, command: String) {
+        this.scenario = scenario
+        this.command = command
+    }
+}
+
+/**
+ * Country code structure.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public class CountryCode {
+    private let countryCodeImpl: CountryCodeImpl
+
+    /**
+     * Country code character string.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop country: String {
+        get() {
+            countryCodeImpl.country
+        }
+        set(v) {
+            countryCodeImpl.country = v
+        }
+    }
+    /**
+     * Country code source.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop countryCodeType: CountryCodeType {
+        get() {
+            countryCodeImpl.countryCodeType
+        }
+        set(v) {
+            countryCodeImpl.countryCodeType = v
+        }
+    }
+
+    init(country: String, countryCodeType: CountryCodeType) {
+        countryCodeImpl = CountryCodeImpl(country, countryCodeType)
+    }
+}
+
+class CountryCodeImpl {
+    var country: String
+    var countryCodeType: CountryCodeType
+
+    init(country: String, countryCodeType: CountryCodeType) {
+        this.country = country
+        this.countryCodeType = countryCodeType
+    }
+}
+
+/**
+ * Enum for country code type.
+ */
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum CountryCodeType {
+    /**
+     * Country code obtained from the locale setting.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    CountryCodeFromLocale
+    |
+    /**
+     * Country code obtained from the SIM information.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    CountryCodeFromSim
+    |
+    /**
+     * Query the country code information from the reverse geocoding result.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    CountryCodeFromLocation
+    |
+    /**
+     * Obtain the country code from the cell registration information.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    CountryCodeFromNetwork
+    | ...
+
+    static func parse(value: Int32): CountryCodeType {
+        match (value) {
+            case 1 => CountryCodeFromLocale
+            case 2 => CountryCodeFromSim
+            case 3 => CountryCodeFromLocation
+            case 4 => CountryCodeFromNetwork
+            case _ => throw BusinessException(3301000, "The type is not supported yet.")
+        }
+    }
+
+    func getValue(): Int32 {
+        match (this) {
+            case CountryCodeFromLocale => 1
+            case CountryCodeFromSim => 2
+            case CountryCodeFromLocation => 3
+            case CountryCodeFromNetwork => 4
+            case _ => throw BusinessException(3301000, "The type is not supported yet.")
+        }
     }
 }
