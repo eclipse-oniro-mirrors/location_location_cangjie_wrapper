@@ -16,7 +16,10 @@
 package ohos.geo_location_manager
 
 import ohos.labels.APILevel
+import ohos.callback_invoke.Callback1Argument
+import ohos.business_exception.AsyncCallback
 import std.collection.{HashMap, Map}
+import std.deriving.Derive
 
 @!APILevel[
     since: "22",
@@ -387,3 +390,417 @@ public class SingleLocationRequest {
         this.locatingTimeoutMs = 0
     }
 }
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public class LocationRequest {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop priority: ?LocationRequestPriority {
+        get() {
+            None
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop scenario: ?LocationRequestScenario {
+        get() {
+            None
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop timeInterval: ?Int32 {
+        get() {
+            None
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop distanceInterval: ?Float64 {
+        get() {
+            None
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop maxAccuracy: ?Float32 {
+        get() {
+            None
+        }
+        set(v) {
+        }
+    }
+
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public init(priority!: ?LocationRequestPriority = None,
+        scenario!: ?LocationRequestScenario = None, timeInterval!: ?Int32 = None,
+        distanceInterval!: ?Float64 = None, maxAccuracy!: ?Float32 = None) {
+    }
+}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public class ContinuousLocationRequest {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop interval: Int32 {
+        get() {
+            0
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop locationScenario: ScenarioValueType {
+        get() {
+            ScenarioValueType.UserActivityScenarioValue(UserActivityScenario.Navigation)
+        }
+        set(v) {
+        }
+    }
+
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public init(interval: Int32, locationScenario: ScenarioValueType) {
+    }
+}
+
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum ScenarioValueType {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    UserActivityScenarioValue(UserActivityScenario)
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    PowerConsumptionScenarioValue(PowerConsumptionScenario)
+    | ...
+}
+
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum LocationError {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedDefault
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedLocationPermissionDenied
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedBackgroundPermissionDenied
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedLocationSwitchOff
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LocatingFailedInternetAccessFailure
+    | ...
+}
+
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum UserActivityScenario {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    Navigation
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    Sport
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    Transport
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    DailyLifeService
+    | ...
+}
+
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum PowerConsumptionScenario {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    HighPowerConsumption
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    LowPowerConsumption
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    NoPowerConsumption
+    | ...
+}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public class LocationCommand {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop scenario: LocationRequestScenario {
+        get() {
+            LocationRequestScenario.Unset
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop command: String {
+        get() {
+            ""
+        }
+        set(v) {
+        }
+    }
+
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public init(scenario: LocationRequestScenario, command: String) {
+    }
+}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public class CountryCode {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop country: String {
+        get() {
+            ""
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    public mut prop countryCodeType: CountryCodeType {
+        get() {
+            CountryCodeType.CountryCodeFromLocale
+        }
+        set(v) {
+        }
+    }
+
+    private init(country: String, countryCodeType: CountryCodeType) {
+    }
+}
+
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core"
+]
+public enum CountryCodeType {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    CountryCodeFromLocale
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    CountryCodeFromSim
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    CountryCodeFromLocation
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Core"
+    ]
+    CountryCodeFromNetwork
+    | ...
+}
+
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onLocationChange(request: LocationRequest, callback: Callback1Argument<Location>): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onLocationChange(request: ContinuousLocationRequest, callback: Callback1Argument<Location>): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func offLocationChange(callback!: ?Callback1Argument<Location> = None): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onLocationError(callback: Callback1Argument<LocationError>): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func offLocationError(callback!: ?Callback1Argument<LocationError> = None): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onLocationEnabledChange(callback: Callback1Argument<Bool>): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func offLocationEnabledChange(callback!: ?Callback1Argument<Bool> = None): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func onCountryCodeChange(callback: Callback1Argument<CountryCode>): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func offCountryCodeChange(callback!: ?Callback1Argument<CountryCode> = None): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func getLastLocation(): Location {
+    return Location()
+}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func sendCommand(command: LocationCommand, callback: AsyncCallback<Unit>): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Core",
+    throwexception: true
+]
+public func getCountryCode(callback: AsyncCallback<CountryCode>): Unit {}

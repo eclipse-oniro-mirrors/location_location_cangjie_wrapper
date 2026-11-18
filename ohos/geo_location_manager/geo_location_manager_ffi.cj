@@ -26,7 +26,41 @@ foreign {
 
     func FfiOHOSGeoLocationManagerGetCurrentLocationSingle(request: CJSingleLocationRequest, errCode: CPointer<Int32>): CJLocation
 
+    func FfiOHOSGeoLocationManagerGetLastLocation(errCode: CPointer<Int32>): CJLocation
+
     func FfiOHOSGeoLocationManagerIsLocationEnabled(errCode: CPointer<Int32>): Bool
+
+    func FfiOHOSGeoLocationManagerSendCommand(command: CJLocationCommand, errCode: CPointer<Int32>): Unit
+
+    func FfiOHOSGeoLocationManagerGetCountryCode(errCode: CPointer<Int32>): CJCountryCode
+
+    func FfiGeoLocationManagerOnLocationChange(request: CJLocationRequest, callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOnContinuousLocationRequest(request: CJContinuousLocationRequest,
+        callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffLocationChange(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffLocationChangeAll(): Int32
+
+    func FfiGeoLocationManagerOnLocationError(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffLocationError(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffLocationErrorAll(): Int32
+
+    func FfiGeoLocationManagerOnLocationEnabledChange(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffLocationEnabledChange(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffLocationEnabledChangeAll(): Int32
+
+    func FfiGeoLocationManagerOnCountryCodeChange(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffCountryCodeChange(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffCountryCodeChangeAll(): Int32
+
 }
 
 @C
@@ -72,6 +106,14 @@ struct CJLocation {
         }
         return Location(this, additions: cjAdditions, additionsMap: cjAdditionsMap,
             sourceType: LocationSourceType.parse(sourceType))
+    }
+
+    func toLocationAndFree(): Location {
+        try {
+            return this.toLocation()
+        } finally {
+            this.free()
+        }
     }
 
     func free(): Unit {
@@ -121,5 +163,70 @@ struct CJSingleLocationRequest {
     init(request: SingleLocationRequest) {
         this.locatingPriority = request.locatingPriority.getValue()
         this.locatingTimeoutMs = request.locatingTimeoutMs
+    }
+}
+
+@C
+struct CJLocationCommand {
+    var scenario: Int32
+    var command: CString = CString(CPointer<UInt8>())
+
+    init(command: LocationCommand) {
+        this.scenario = command.scenario.getValue()
+        this.command = unsafe { LibC.mallocCString(command.command) }
+    }
+
+    func free(): Unit {
+        unsafe { LibC.free(command) }
+    }
+}
+
+@C
+struct CJCountryCode {
+    var country: CString = CString(CPointer<UInt8>())
+    var `type`: Int32 = 0
+
+    func toCountryCode(): CountryCode {
+        return CountryCode(country.toString(), CountryCodeType.parse(`type`))
+    }
+
+    func toCountryCodeAndFree(): CountryCode {
+        try {
+            return this.toCountryCode()
+        } finally {
+            this.free()
+        }
+    }
+
+    func free(): Unit {
+        unsafe { LibC.free(country) }
+    }
+}
+
+@C
+struct CJLocationRequest {
+    var priority: Int32 = 0x203
+    var scenario: Int32 = 0x300
+    var timeInterval: Int32 = 1
+    var distanceInterval: Float64 = 0.0
+    var maxAccuracy: Float32 = 0.0
+
+    init(request: LocationRequest) {
+        this.priority = (request.priority ?? LocationRequestPriority.FirstFix).getValue()
+        this.scenario = (request.scenario ?? LocationRequestScenario.Unset).getValue()
+        this.timeInterval = request.timeInterval ?? 1
+        this.distanceInterval = request.distanceInterval ?? 0.0
+        this.maxAccuracy = request.maxAccuracy ?? 0.0
+    }
+}
+
+@C
+struct CJContinuousLocationRequest {
+    var interval: Int32
+    var locationScenario: Int32
+
+    init(request: ContinuousLocationRequest) {
+        this.interval = request.interval
+        this.locationScenario = request.locationScenario.getValue()
     }
 }
