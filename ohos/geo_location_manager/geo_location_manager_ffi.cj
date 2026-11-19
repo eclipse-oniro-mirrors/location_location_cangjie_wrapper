@@ -61,6 +61,18 @@ foreign {
 
     func FfiGeoLocationManagerOffCountryCodeChangeAll(): Int32
 
+    func FfiGeoLocationManagerOnSatelliteStatusChange(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffSatelliteStatusChange(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffSatelliteStatusChangeAll(): Int32
+
+    func FfiGeoLocationManagerOnNmeaMessage(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffNmeaMessage(callbackId: Int64): Int32
+
+    func FfiGeoLocationManagerOffNmeaMessageAll(): Int32
+
 }
 
 @C
@@ -228,5 +240,94 @@ struct CJContinuousLocationRequest {
     init(request: ContinuousLocationRequest) {
         this.interval = request.interval
         this.locationScenario = request.locationScenario.getValue()
+    }
+}
+
+@C
+struct CArrI32 {
+    var head: CPointer<Int32> = CPointer<Int32>()
+    var size: Int64 = 0
+
+    func toArray(): Array<Int32> {
+        if (head.isNotNull()) {
+            unsafe { Array<Int32>(size, {i => head.read(i)}) }
+        } else {
+            Array<Int32>()
+        }
+    }
+
+    func toOptionalArray(): ?Array<Int32> {
+        if (head.isNotNull()) {
+            Some(unsafe { Array<Int32>(size, {i => head.read(i)}) })
+        } else {
+            Option<Array<Int32>>.None
+        }
+    }
+
+    func free(): Unit {
+        unsafe { LibC.free(head) }
+    }
+}
+
+@C
+struct CArrF64 {
+    var head: CPointer<Float64> = CPointer<Float64>()
+    var size: Int64 = 0
+
+    func toArray(): Array<Float64> {
+        if (head.isNotNull()) {
+            unsafe { Array<Float64>(size, {i => head.read(i)}) }
+        } else {
+            Array<Float64>()
+        }
+    }
+
+    func free(): Unit {
+        unsafe { LibC.free(head) }
+    }
+}
+
+@C
+struct CJSatelliteStatusInfo {
+    var satellitesNumber: Int32 = 0
+    var satelliteIds: CArrI32 = CArrI32()
+    var carrierToNoiseDensitys: CArrF64 = CArrF64()
+    var altitudes: CArrF64 = CArrF64()
+    var azimuths: CArrF64 = CArrF64()
+    var carrierFrequencies: CArrF64 = CArrF64()
+    var constellationTypes: CArrI32 = CArrI32()
+    var additionalInfoList: CArrI32 = CArrI32()
+
+    func toSatelliteStatusInfo(): SatelliteStatusInfo {
+        let satelliteConstellation: ?Array<SatelliteConstellationCategory> =
+            if (constellationTypes.head.isNotNull()) {
+                Some(unsafe {
+                    Array<SatelliteConstellationCategory>(constellationTypes.size,
+                        {i => SatelliteConstellationCategory.parse(constellationTypes.head.read(i))})
+                })
+            } else {
+                Option<Array<SatelliteConstellationCategory>>.None
+            }
+        return SatelliteStatusInfo(satellitesNumber, satelliteIds.toArray(), carrierToNoiseDensitys.toArray(),
+            altitudes.toArray(), azimuths.toArray(), carrierFrequencies.toArray(), satelliteConstellation,
+            additionalInfoList.toOptionalArray())
+    }
+
+    func toSatelliteStatusInfoAndFree(): SatelliteStatusInfo {
+        try {
+            return this.toSatelliteStatusInfo()
+        } finally {
+            this.free()
+        }
+    }
+
+    func free(): Unit {
+        satelliteIds.free()
+        carrierToNoiseDensitys.free()
+        altitudes.free()
+        azimuths.free()
+        carrierFrequencies.free()
+        constellationTypes.free()
+        additionalInfoList.free()
     }
 }

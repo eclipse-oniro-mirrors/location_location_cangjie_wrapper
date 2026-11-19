@@ -531,6 +531,266 @@ public class SingleLocationRequest {
     }
 }
 
+/**
+ * Satellite status information.
+ */
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Gnss"
+]
+public class SatelliteStatusInfo {
+    private let satelliteStatusInfoImpl: SatelliteStatusInfoImpl
+
+    /**
+     * Number of satellites.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop satellitesNumber: Int32 {
+        get() {
+            satelliteStatusInfoImpl.satellitesNumber
+        }
+        set(v) {
+            satelliteStatusInfoImpl.satellitesNumber = v
+        }
+    }
+    /**
+     * Satellite ID array.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop satelliteIds: Array<Int32> {
+        get() {
+            satelliteStatusInfoImpl.satelliteIds
+        }
+        set(v) {
+            satelliteStatusInfoImpl.satelliteIds = v
+        }
+    }
+    /**
+     * Carrier to noise density array.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop carrierToNoiseDensitys: Array<Float64> {
+        get() {
+            satelliteStatusInfoImpl.carrierToNoiseDensitys
+        }
+        set(v) {
+            satelliteStatusInfoImpl.carrierToNoiseDensitys = v
+        }
+    }
+    /**
+     * Satellite altitude array.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop altitudes: Array<Float64> {
+        get() {
+            satelliteStatusInfoImpl.altitudes
+        }
+        set(v) {
+            satelliteStatusInfoImpl.altitudes = v
+        }
+    }
+    /**
+     * Satellite azimuth array.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop azimuths: Array<Float64> {
+        get() {
+            satelliteStatusInfoImpl.azimuths
+        }
+        set(v) {
+            satelliteStatusInfoImpl.azimuths = v
+        }
+    }
+    /**
+     * Satellite carrier frequency array.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop carrierFrequencies: Array<Float64> {
+        get() {
+            satelliteStatusInfoImpl.carrierFrequencies
+        }
+        set(v) {
+            satelliteStatusInfoImpl.carrierFrequencies = v
+        }
+    }
+    /**
+     * Satellite constellation type array.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop satelliteConstellation: ?Array<SatelliteConstellationCategory> {
+        get() {
+            satelliteStatusInfoImpl.satelliteConstellation
+        }
+        set(v) {
+            satelliteStatusInfoImpl.satelliteConstellation = v
+        }
+    }
+    /**
+     * Satellite additional information array.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop satelliteAdditionalInfo: ?Array<Int32> {
+        get() {
+            satelliteStatusInfoImpl.satelliteAdditionalInfo
+        }
+        set(v) {
+            satelliteStatusInfoImpl.satelliteAdditionalInfo = v
+        }
+    }
+
+    init(satellitesNumber: Int32, satelliteIds: Array<Int32>, carrierToNoiseDensitys: Array<Float64>,
+        altitudes: Array<Float64>, azimuths: Array<Float64>, carrierFrequencies: Array<Float64>,
+        satelliteConstellation: ?Array<SatelliteConstellationCategory>, satelliteAdditionalInfo: ?Array<Int32>) {
+        satelliteStatusInfoImpl = SatelliteStatusInfoImpl(satellitesNumber, satelliteIds, carrierToNoiseDensitys,
+            altitudes, azimuths, carrierFrequencies, satelliteConstellation, satelliteAdditionalInfo)
+    }
+}
+
+class SatelliteStatusInfoImpl {
+    var satellitesNumber: Int32
+    var satelliteIds: Array<Int32>
+    var carrierToNoiseDensitys: Array<Float64>
+    var altitudes: Array<Float64>
+    var azimuths: Array<Float64>
+    var carrierFrequencies: Array<Float64>
+    var satelliteConstellation: ?Array<SatelliteConstellationCategory>
+    var satelliteAdditionalInfo: ?Array<Int32>
+
+    init(satellitesNumber: Int32, satelliteIds: Array<Int32>, carrierToNoiseDensitys: Array<Float64>,
+        altitudes: Array<Float64>, azimuths: Array<Float64>, carrierFrequencies: Array<Float64>,
+        satelliteConstellation: ?Array<SatelliteConstellationCategory>, satelliteAdditionalInfo: ?Array<Int32>) {
+        this.satellitesNumber = satellitesNumber
+        this.satelliteIds = satelliteIds
+        this.carrierToNoiseDensitys = carrierToNoiseDensitys
+        this.altitudes = altitudes
+        this.azimuths = azimuths
+        this.carrierFrequencies = carrierFrequencies
+        this.satelliteConstellation = satelliteConstellation
+        this.satelliteAdditionalInfo = satelliteAdditionalInfo
+    }
+}
+
+/**
+ * Enum for satellite constellation category.
+ */
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Gnss"
+]
+public enum SatelliteConstellationCategory {
+    /**
+     * Invalid value.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryUnknown
+    |
+    /**
+     * GPS.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryGps
+    |
+    /**
+     * SBAS.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategorySbas
+    |
+    /**
+     * GLONASS.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryGlonass
+    |
+    /**
+     * QZSS.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryQzss
+    |
+    /**
+     * BEIDOU.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryBeidou
+    |
+    /**
+     * GALILEO.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryGalileo
+    |
+    /**
+     * IRNSS.
+     */
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryIrnss
+    | ...
+
+    static func parse(value: Int32): SatelliteConstellationCategory {
+        match (value) {
+            case 0 => ConstellationCategoryUnknown
+            case 1 => ConstellationCategoryGps
+            case 2 => ConstellationCategorySbas
+            case 3 => ConstellationCategoryGlonass
+            case 4 => ConstellationCategoryQzss
+            case 5 => ConstellationCategoryBeidou
+            case 6 => ConstellationCategoryGalileo
+            case 7 => ConstellationCategoryIrnss
+            case _ => throw BusinessException(3301000, "The type is not supported yet.")
+        }
+    }
+}
+
 func getErrorCode(code: Int32): Int32 {
     const MEMORY_ERROR: Int32 = -1
     if (code == MEMORY_ERROR) {

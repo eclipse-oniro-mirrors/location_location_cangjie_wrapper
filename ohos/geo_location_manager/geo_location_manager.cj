@@ -20,7 +20,7 @@ package ohos.geo_location_manager
 import ohos.business_exception.{BusinessException, AsyncCallback}
 import ohos.callback_invoke.{CallbackObject, Callback1Argument}
 import ohos.ffi.{Callback1Param, SUCCESS_CODE}
-import ohos.labels.APILevel
+import ohos.labels.{APILevel, PermissionValue}
 import std.collection.ArrayList
 import std.sync.Mutex
 
@@ -162,6 +162,8 @@ public class GeoLocationManager {
 let LOCATION_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
 let LOCATION_ERROR_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
 let LOCATION_ENABLED_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
+let SATELLITE_STATUS_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
+let NMEA_MESSAGE_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
 let COUNTRY_CODE_CALLBACKS = ArrayList<(CallbackObject, Int64)>()
 let ON_OFF_MUTEX = Mutex()
 
@@ -412,6 +414,136 @@ public func offLocationEnabledChange(callback!: ?Callback1Argument<Bool> = None)
     match (callback) {
         case Some(value) => off(LOCATION_ENABLED_CALLBACKS, value, FfiGeoLocationManagerOffLocationEnabledChange)
         case None => offAll(LOCATION_ENABLED_CALLBACKS, FfiGeoLocationManagerOffLocationEnabledChangeAll)
+    }
+}
+
+/**
+ * Subscribe satellite status changed.
+ *
+ * @param { Callback1Argument<SatelliteStatusInfo> } callback - Indicates the callback for reporting the satellite status.
+ * @throws { BusinessException } 201 - Permission verification failed. The application does not have the
+ *     permission required to call the API.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.onSatelliteStatusChange} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301100 - The location switch is off.
+ */
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Gnss",
+    throwexception: true
+]
+public func onSatelliteStatusChange(callback: Callback1Argument<SatelliteStatusInfo>): Unit {
+    synchronized(ON_OFF_MUTEX) {
+        if (findCallbackObject(SATELLITE_STATUS_CALLBACKS, callback)) {
+            GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager On failed: This request already exists")
+            return
+        }
+        unsafe {
+            let wrapper = {
+                value: CJSatelliteStatusInfo => callback.invoke(None, value.toSatelliteStatusInfoAndFree())
+            }
+            let lambdaData = Callback1Param<CJSatelliteStatusInfo, Unit>.create(wrapper)
+            let errCode = FfiGeoLocationManagerOnSatelliteStatusChange(lambdaData.getID())
+            if (errCode != SUCCESS_CODE) {
+                lambdaData.destroySelf()
+                checkRet(errCode)
+            }
+            SATELLITE_STATUS_CALLBACKS.add((callback, lambdaData.getID()))
+        }
+    }
+}
+
+/**
+ * Unsubscribe satellite status changed.
+ *
+ * @param { ?Callback1Argument<SatelliteStatusInfo> } [callback] - Indicates the callback for reporting the satellite status.
+ * @throws { BusinessException } 201 - Permission verification failed. The application does not have the
+ *     permission required to call the API.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.offSatelliteStatusChange} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301100 - The location switch is off.
+ */
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Gnss",
+    throwexception: true
+]
+public func offSatelliteStatusChange(callback!: ?Callback1Argument<SatelliteStatusInfo> = None): Unit {
+    match (callback) {
+        case Some(value) => off(SATELLITE_STATUS_CALLBACKS, value, FfiGeoLocationManagerOffSatelliteStatusChange)
+        case None => offAll(SATELLITE_STATUS_CALLBACKS, FfiGeoLocationManagerOffSatelliteStatusChangeAll)
+    }
+}
+
+/**
+ * Subscribe nmea message changed.
+ *
+ * @param { Callback1Argument<String> } callback - Indicates the callback for reporting the nmea message.
+ * @throws { BusinessException } 201 - Permission verification failed. The application does not have the
+ *     permission required to call the API.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.onNmeaMessage} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301100 - The location switch is off.
+ */
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.LOCATION" & "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Gnss",
+    throwexception: true
+]
+public func onNmeaMessage(callback: Callback1Argument<String>): Unit {
+    synchronized(ON_OFF_MUTEX) {
+        if (findCallbackObject(NMEA_MESSAGE_CALLBACKS, callback)) {
+            GEO_LOCATION_MANAGER_LOG.error("GeoLocationManager On failed: This request already exists")
+            return
+        }
+        unsafe {
+            let wrapper = {
+                value: CString =>
+                    let message = try {
+                        value.toString()
+                    } finally {
+                        LibC.free(value)
+                    }
+                    callback.invoke(None, message)
+            }
+            let lambdaData = Callback1Param<CString, Unit>.create(wrapper)
+            let errCode = FfiGeoLocationManagerOnNmeaMessage(lambdaData.getID())
+            if (errCode != SUCCESS_CODE) {
+                lambdaData.destroySelf()
+                checkRet(errCode)
+            }
+            NMEA_MESSAGE_CALLBACKS.add((callback, lambdaData.getID()))
+        }
+    }
+}
+
+/**
+ * Unsubscribe nmea message changed.
+ *
+ * @param { ?Callback1Argument<String> } [callback] - Indicates the callback for reporting the nmea message.
+ * @throws { BusinessException } 201 - Permission verification failed. The application does not have the
+ *     permission required to call the API.
+ * @throws { BusinessException } 801 - Capability not supported. Failed to call
+ *     ${geoLocationManager.offNmeaMessage} due to limited device capabilities.
+ * @throws { BusinessException } 3301000 - The location service is unavailable.
+ * @throws { BusinessException } 3301100 - The location switch is off.
+ */
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.LOCATION" & "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Gnss",
+    throwexception: true
+]
+public func offNmeaMessage(callback!: ?Callback1Argument<String> = None): Unit {
+    match (callback) {
+        case Some(value) => off(NMEA_MESSAGE_CALLBACKS, value, FfiGeoLocationManagerOffNmeaMessage)
+        case None => offAll(NMEA_MESSAGE_CALLBACKS, FfiGeoLocationManagerOffNmeaMessageAll)
     }
 }
 

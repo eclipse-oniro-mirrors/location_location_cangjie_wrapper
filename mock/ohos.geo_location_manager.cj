@@ -15,7 +15,7 @@
 
 package ohos.geo_location_manager
 
-import ohos.labels.APILevel
+import ohos.labels.{APILevel, PermissionValue}
 import ohos.callback_invoke.Callback1Argument
 import ohos.business_exception.AsyncCallback
 import std.collection.{HashMap, Map}
@@ -804,3 +804,188 @@ public func sendCommand(command: LocationCommand, callback: AsyncCallback<Unit>)
     throwexception: true
 ]
 public func getCountryCode(callback: AsyncCallback<CountryCode>): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Gnss",
+    throwexception: true
+]
+public func onSatelliteStatusChange(callback: Callback1Argument<SatelliteStatusInfo>): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Gnss",
+    throwexception: true
+]
+public func offSatelliteStatusChange(callback!: ?Callback1Argument<SatelliteStatusInfo> = None): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.LOCATION" & "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Gnss",
+    throwexception: true
+]
+public func onNmeaMessage(callback: Callback1Argument<String>): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    permission: "ohos.permission.LOCATION" & "ohos.permission.APPROXIMATELY_LOCATION",
+    syscap: "SystemCapability.Location.Location.Gnss",
+    throwexception: true
+]
+public func offNmeaMessage(callback!: ?Callback1Argument<String> = None): Unit {}
+
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Gnss"
+]
+public class SatelliteStatusInfo {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop satellitesNumber: Int32 {
+        get() {
+            0
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop satelliteIds: Array<Int32> {
+        get() {
+            Array<Int32>()
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop carrierToNoiseDensitys: Array<Float64> {
+        get() {
+            Array<Float64>()
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop altitudes: Array<Float64> {
+        get() {
+            Array<Float64>()
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop azimuths: Array<Float64> {
+        get() {
+            Array<Float64>()
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop carrierFrequencies: Array<Float64> {
+        get() {
+            Array<Float64>()
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop satelliteConstellation: ?Array<SatelliteConstellationCategory> {
+        get() {
+            None
+        }
+        set(v) {
+        }
+    }
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    public mut prop satelliteAdditionalInfo: ?Array<Int32> {
+        get() {
+            None
+        }
+        set(v) {
+        }
+    }
+
+    private init() {}
+}
+
+@Derive[ToString, Equatable]
+@!APILevel[
+    since: "26.1.0",
+    syscap: "SystemCapability.Location.Location.Gnss"
+]
+public enum SatelliteConstellationCategory {
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryUnknown
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryGps
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategorySbas
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryGlonass
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryQzss
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryBeidou
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryGalileo
+    |
+    @!APILevel[
+        since: "26.1.0",
+        syscap: "SystemCapability.Location.Location.Gnss"
+    ]
+    ConstellationCategoryIrnss
+    | ...
+}
